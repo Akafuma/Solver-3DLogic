@@ -8,11 +8,14 @@ public class Sommet {
 	private ArrayList<Sommet> voisins;
 	//Domaines
 	
-	public Sommet(boolean isSource, int c)
+	public Sommet(int c)
 	{
 		voisins = new ArrayList<Sommet>();
-		source = isSource;
 		color = c;
+		if(c > 0)//Le sommet est une source
+			source = true;
+		else//Le sommet est une case coloriable
+			source = false;
 	}
 	
 	public String getName() {
@@ -61,8 +64,7 @@ public class Sommet {
 	public void ajouteVoisin(Sommet v)
 	{
 		voisins.add(v);
-	}
-	
+	}	
 	
 	public void printAdjacency()
 	{
@@ -74,7 +76,3 @@ public class Sommet {
 		System.out.println();
 	}
 }
-
-/*
- * Dans ce cas on travaille sur les sommets uniquements
- */

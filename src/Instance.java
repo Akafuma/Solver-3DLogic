@@ -4,25 +4,15 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Instance {
-	private int size; //Doit etre donné dans le fichier inst
-	private int nbColors;
-	private int nbVariables;
-	private ArrayList<Sommet> sommets = new ArrayList<Sommet>();
-	//Sommet au lieu de int
+	private int size;
+	private ArrayList<Sommet> sommets = new ArrayList<Sommet>();//Liste de tous les sommets qui sont présent dans l'instance
+
 	Sommet[][] top;
 	Sommet[][] left;
 	Sommet[][] right;
 	
 	public int getSize() {
 		return size;
-	}
-
-	public int getNbColors() {
-		return nbColors;
-	}
-
-	public int getNbVariables() {
-		return nbVariables;
 	}
 
 	public ArrayList<Sommet> getSommets() {
@@ -64,24 +54,14 @@ public class Instance {
 						for(int j = 0; j < size; j++)
 						{
 							value = scline.nextInt();
-							if(value == 0) //Le sommet est coloriable
+							if(value >= 0)
 							{
-								nbVariables++;
-								s = new Sommet(false, 0);
-							}
-							else if(value > 0)//Le sommet est une source							
-							{
-								nbColors++;
-								s = new Sommet(true, value);
-							}
-							else//Le sommet n'est une case noire : on l'oublie
-								s = null;
-							
-							if(s != null)
-							{
+								s = new Sommet(value);
 								s.setName("t"+i+","+j);
 								sommets.add(s);
 							}
+							else//Le sommet est une case noire : on l'oublie
+								s = null;
 							
 							top[i][j] = s;
 						}
@@ -98,25 +78,15 @@ public class Instance {
 						for(int j = 0; j < size; j++)
 						{
 							value = scline.nextInt();
-							if(value == 0)
+							if(value >= 0)
 							{
-								nbVariables++;
-								s = new Sommet(false, 0);
-							}
-							else if(value > 0)
-							{
-								nbColors++;
-								s = new Sommet(true, value);
-							}
-							else
-								s = null;
-							
-							if(s != null)
-							{
+								s = new Sommet(value);
 								s.setName("l"+i+","+j);
 								sommets.add(s);
 							}
-							
+							else
+								s = null;
+	
 							left[i][j] = s;
 						}
 						scline.close();
@@ -132,24 +102,14 @@ public class Instance {
 						for(int j = 0; j < size; j++)
 						{
 							value = scline.nextInt();
-							if(value == 0)
+							if(value >= 0)
 							{
-								nbVariables++;
-								s = new Sommet(false, 0);
-							}
-							else if(value > 0)
-							{
-								nbColors++;
-								s = new Sommet(true, value);
-							}
-							else
-								s = null;
-							
-							if(s != null)
-							{
+								s = new Sommet(value);
 								s.setName("r"+i+","+j);
 								sommets.add(s);
 							}
+							else
+								s = null;
 							
 							right[i][j] = s;
 						}
@@ -158,8 +118,6 @@ public class Instance {
 				}
 			}			
 			sc.close();
-			
-			nbColors = nbColors / 2;
 			
 			if(!flagT || !flagL || !flagR)
 			{
@@ -346,7 +304,7 @@ public class Instance {
 	
 	public void print()
 	{
-		System.out.println("Instance :\n size = " + size + "\n nbColors = " + nbColors + "\n nbVariables = " + nbVariables);
+		System.out.println("Instance :\n size = " + size);
 		System.out.println("Top :");
 		for(int i = 0; i < size; i++)
 		{
@@ -394,6 +352,7 @@ public class Instance {
 		i.print();
 		i.buildGraph();
 		
+		System.out.println("Affichage de la liste d'adjacence");
 		for(int r = 0; r < i.getSize(); r++)
 		{
 			for(int j = 0; j < i.getSize(); j++)
@@ -423,7 +382,5 @@ public class Instance {
 					s.printAdjacency();
 			}
 		}
-		
-		System.out.println("NbSommets : " + i.sommets.size());
 	}
 }
