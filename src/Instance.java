@@ -4,12 +4,13 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Instance {
+	private boolean graphBuilt = false;
 	private int size;
 	private ArrayList<Sommet> sommets = new ArrayList<Sommet>();//Liste de tous les sommets qui sont présent dans l'instance
 
-	Sommet[][] top;
-	Sommet[][] left;
-	Sommet[][] right;
+	private Sommet[][] top;
+	private Sommet[][] left;
+	private Sommet[][] right;
 	
 	public int getSize() {
 		return size;
@@ -144,9 +145,13 @@ public class Instance {
 	
 	public void buildGraph()
 	{
-		linkTop();
-		linkLeft();
-		linkRight();
+		if(!graphBuilt)
+		{
+			linkTop();
+			linkLeft();
+			linkRight();
+			graphBuilt = true;
+		}		
 	}
 	
 	private void linkTop()
@@ -343,6 +348,11 @@ public class Instance {
 			}
 			System.out.println();
 		}
+	}
+	
+	public void printSolution()
+	{
+		System.out.println("To implement");
 	}
 	
 	public static void main(String[] args) {

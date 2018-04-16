@@ -3,6 +3,14 @@ import java.util.Stack;
 
 public class Solver {
 	private Instance instance;
+	
+	private int nbAssignation = 0;
+	private int nbReassignation = 0;
+	
+	private ArrayList<Sommet> variables = new ArrayList<Sommet>();
+	private ArrayList<Sommet> sources = new ArrayList<Sommet>();
+	private int nbColor;
+	
 	//boolean[colors+1]
 			//Sommet[colors+1] : on y stocke une source
 			//Sommet[nbVar] : les variables sur lesquelles énumère les possibilités
@@ -12,7 +20,7 @@ public class Solver {
 		instance = inst;
 	}
 	
-	//Transform into path(Sommet source, Sommet cible)
+	//Renvoie true si un chemin est possible pour la source, sinon false
 	private boolean path(Sommet source)//DFS
 	{
 		if(source.isSource() == false || source == null)//Argument checking
@@ -109,41 +117,170 @@ public class Solver {
 		return false;
 	}
 	
-	public void solve()
+	private boolean satisfiesConstraints()
 	{
-		//On récupère les variables, les domaines
-		//on commence l'énumération
+		for(int i = 0; i < sources.size(); i++)
+		{
+			if(!path(sources.get(i)))
+				return false;
+		}
+		return true;
+	}
+
+	private boolean isSolution()
+	{
+		for(int i = 0; i < sources.size(); i++)
+		{
+			if(!isLinked(sources.get(i)))//Si une source n'est pas relié : pas une solution
+					return false;
+		}
+		return true;
+	}
+
+	private Sommet nextVar(ArrayList<Sommet> var)
+	{
+		for(int i = 0; i < var.size(); i++)
+		{
+			if(var.get(i).getColor() == 0)
+				return var.get(i);
+		}
 		
-		/*
-		 * 	On assigne une couleur à une variable, on applique la méthode path sur chaque source/couleur si un seul renvoie faux : on assigne une autre couleur
-		 * 																								 sinon on passe à la variable suivante
-		 * 					Dans le cas où la variable a été colorié de toute les couleurs et le test path échoue : on backtrack
-		 */
+		return null;
+	}
+
+	private void solve()
+	{
+		Sommet s = null;
+		int color = 0;
+		boolean over = false;
+		boolean REASSIGN = false;
+		Stack<Sommet> stack = new Stack<Sommet>(); //Pile d'instanciation
+		
+		while(!over)
+		{	
+			if(!satisfiesConstraints())//Si les contraintes ne sont pas satisfaites
+			{
+				System.out.println("Contrainte enfreinte");
+				s = stack.pop(); //on ignore s = null car toute instance a une solution
+				color = s.d.nextColor();
+				
+				if(color < 0)//Fin du domaine
+				{
+					//On peut sortir le while du if et supprimer le if/else car inutile
+					while(color < 0)//Backtracking
+					{
+						System.out.print("Backtrack : ");
+						s.d.reset();//On reset le domaine de la variable dépilé
+						s.setColor(0);//On n'oublie pas de décolorier la variable dépilé
+						
+						s = stack.pop();//On récupère la prochaine variable d'instanciation
+						color = s.d.nextColor();
+					}
+					
+					REASSIGN = true;
+				}
+				else
+				{
+					System.out.print("Reassignation : ");
+					REASSIGN = true;
+				}
+				//Reassignation
+				//On set la couleur à 0 pour etre eligible
+				//
+				//BACKTRACK
+			}
+			else if(isSolution())//FIN
+			{
+				System.out.println("Solution trouvé");
+				over = true;
+				continue;
+				//On affiche la solution
+			}
+			
+			if(!REASSIGN)//On choisit la prochaine variable à instancier
+			{
+				s = nextVar(variables);
+				color = s.d.nextColor();
+				nbAssignation++;
+			}
+			else//On réassigne la variable
+			{
+				REASSIGN = false;
+				nbReassignation++;
+			}
+			
+			System.out.println("Assignation de la variable " + s.getName() + " couleur : " + color);
+			s.setColor(color);
+			stack.push(s);
+		}
 	}
 	
-	public void init()
+	private void init()
 	{
+		//On s'assure que le graphe est généré
+		instance.buildGraph();
 		
+		Sommet s;
+		ArrayList<Sommet> sommets = instance.getSommets();
+		
+		//On sépare les sommets sources des sommets variables
+		for(int i = 0; i < sommets.size(); i++)
+		{
+			s = sommets.get(i);
+			if(s.isSource())
+				sources.add(s);
+			else
+				variables.add(s);			
+		}
+		
+		nbColor = sources.size() / 2;
+		boolean[] mark = new boolean[nbColor + 1];
+		
+		//On a besoin que d'une seule source pour chaque couleur, on supprime celle en trop
+		for(int i = 0; i < sources.size(); i++)
+		{
+			s = sources.get(i);
+			if(!mark[s.getColor()])
+			{
+				mark[s.getColor()] = true;
+				sources.remove(i);
+			}
+		}
+		
+		//On initialise le domaine des sommets variables
+		for(int i = 0; i < variables.size(); i++)
+		{
+			variables.get(i).d = new Domaine(nbColor);
+		}
 	}
 	
 	//Méthode pour lancer la résolution de l'instance
 	public void start()//
 	{
+		long start, end, duration;
 		
+		init();
+		start = System.nanoTime();
+		solve();
+		end = System.nanoTime();
+		
+		instance.printSolution();
+		
+		duration = end - start;
+		System.out.println("Solution trouvé en " + (duration / 1000000000.0) + " s");		
+		
+		System.out.println("Nombre d'assignation : " + nbAssignation);
+		System.out.println("Nombre de réassignation : " + nbReassignation);
+		System.out.println("Total : " + (nbAssignation + nbReassignation));
 	}
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		Instance i = new Instance();
-		i.loadFromFile("instances/level1.txt");
-		i.buildGraph();
-		
-		Solver solver = new Solver(i);
-		System.out.println(solver.isLinked(i.left[2][1]));
-		System.out.println("On colorie l1,1 en 3");
-		i.left[1][1].setColor(3);
-		System.out.println(solver.isLinked(i.left[2][1]));
-		
+		Instance instance = new Instance();
+		instance.loadFromFile("instances/level5.txt");
+		//instance.print();
+		Solver solver = new Solver(instance);
+		solver.start();
 	}
 
 }
