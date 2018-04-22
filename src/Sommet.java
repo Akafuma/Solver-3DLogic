@@ -16,8 +16,7 @@ public class Sommet {
 			source = true;
 		else//Le sommet est une case coloriable
 			source = false;
-	}
-	
+	}	
 	
 	public String getName() {
 		return name;
@@ -47,6 +46,11 @@ public class Sommet {
 		return color;
 	}	
 	
+	public void setNextColor(int c)
+	{
+		d.setNextColor(c);
+	}
+
 	public void setColor(int c)
 	{
 		if(source)//On ne colorie pas
@@ -76,4 +80,5 @@ public class Sommet {
 		}
 		System.out.println();
 	}
+	
 }
