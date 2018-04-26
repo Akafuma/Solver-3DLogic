@@ -352,7 +352,58 @@ public class Instance {
 	
 	public void printSolution()
 	{
-		System.out.println("To implement");
+		System.out.println();
+		for(int r = 0; r < size; r++)
+		{
+			System.out.print("|");
+			for(int c = 0; c < size; c++)
+			{
+				Sommet s = top[r][c];
+				String str = "";
+				if(s == null)
+					str = "--|";
+				else if(s.isSource())
+					str = s.getColor() + "!|";
+				else
+					str = s.getColor() + " |";
+				System.out.print(str);
+			}
+			System.out.println();
+		}
+		
+		System.out.println();
+		for(int r = 0; r < size; r++)
+		{
+			System.out.print("|");
+			for(int c = 0; c < size; c++)
+			{
+				Sommet s = left[r][c];
+				String str = "";
+				if(s == null)
+					str = "--|";
+				else if(s.isSource())
+					str = s.getColor() + "!|";
+				else
+					str = s.getColor() + " |";
+				System.out.print(str);
+			}
+			
+			System.out.print("   |");
+			for(int c = 0; c < size; c++)
+			{
+				Sommet s = right[r][c];
+				String str = "";
+				if(s == null)
+					str = "--|";
+				else if(s.isSource())
+					str = s.getColor() + "!|";
+				else
+					str = s.getColor() + " |";
+				System.out.print(str);
+			}
+			System.out.println();
+		}
+		System.out.println();
 	}
 	
 	public static void main(String[] args) {

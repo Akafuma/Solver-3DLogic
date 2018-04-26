@@ -6,6 +6,7 @@ public class Sommet {
 	private boolean source;
 	private int color;
 	private ArrayList<Sommet> voisins;
+	private boolean forcedColor;
 	Domaine d;
 	
 	public Sommet(int c)
@@ -16,6 +17,8 @@ public class Sommet {
 			source = true;
 		else//Le sommet est une case coloriable
 			source = false;
+		
+		forcedColor = false;
 	}	
 	
 	public String getName() {
@@ -46,9 +49,9 @@ public class Sommet {
 		return color;
 	}	
 	
-	public void setNextColor(int c)
+	public int nextColor(boolean[] state)
 	{
-		d.setNextColor(c);
+		return d.nextColor(state);
 	}
 
 	public void setColor(int c)
@@ -59,7 +62,31 @@ public class Sommet {
 			System.exit(1);
 		}
 		
+		if(c < 0)
+		{
+			System.out.println("Illegal argument : Sommet " + getName() + " colorié en " + c);
+			System.exit(1);
+		}
+		
 		color = c;
+	}
+	
+	public boolean forcedColor()
+	{
+		return forcedColor;
+	}
+	
+	public void reset()
+	{
+		d.reset();
+		setColor(0);
+		forcedColor = false;
+	}
+	
+	public void setDomaine(Domaine d)
+	{
+		this.d = d;
+		d.setSommet(this);
 	}
 	
 	public ArrayList<Sommet> getVoisins() {
@@ -69,7 +96,7 @@ public class Sommet {
 	public void ajouteVoisin(Sommet v)
 	{
 		voisins.add(v);
-	}	
+	}
 	
 	public void printAdjacency()
 	{
