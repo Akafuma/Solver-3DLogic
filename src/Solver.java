@@ -31,7 +31,6 @@ public class Solver {
 	 */
 	//private ArrayList<Sommet> varInstancie = new ArrayList<Sommet>();
 	
-	//Note : optimiser les tailles de listes avec le constructeur
 	//Utilisation d'une liste de variables prioritaire
 	private LinkedHashSet<Sommet> firstVar;
 	private LinkedHashSet<Sommet> secondVar;
@@ -158,10 +157,10 @@ public class Solver {
 
 	private boolean isSolution()
 	{
-		for(int i = 0; i < uniqueSourceColor.size(); i++)
+		for(int i = 1; i < colorLinked.length; i++)
 		{
-			if(!isLinked(uniqueSourceColor.get(i)))//Si une source n'est pas relié : pas une solution
-					return false;
+			if(colorLinked[i] == false)
+				return false;
 		}
 		return true;
 	}
@@ -174,6 +173,20 @@ public class Solver {
 				colorLinked[uniqueSourceColor.get(i).getColor()] = true;
 			else
 				colorLinked[uniqueSourceColor.get(i).getColor()] = false;;
+		}
+	}
+	
+	/*
+	 * On regarde si la couleur color est terminé
+	 */
+	private void updateColorLinked(int color)
+	{
+		Sommet source;
+		for(int i = 0; i < uniqueSourceColor.size(); i++)
+		{
+			source = uniqueSourceColor.get(i);
+			if(source.getColor() == color)
+				colorLinked[color] = isLinked(source);
 		}
 	}
 
@@ -331,7 +344,7 @@ public class Solver {
 	private void solve() throws FileNotFoundException
 	{
 		Sommet s = null;
-		int color = 0;
+		int color = 0, lastColor = 0;
 		boolean over = false;
 		boolean REASSIGN = false;
 		Stack<Sommet> stack = new Stack<Sommet>(); //Pile d'instanciation
@@ -342,7 +355,7 @@ public class Solver {
 			{
 				//System.out.println("Contrainte enfreinte");
 				s = stack.pop(); //on ignore s = null car toute instance a une solution				
-				checkLinkedPaths();				
+				lastColor = s.getColor();//On récupère la couleur de la variable sur laquelle on échoue
 				color = s.nextColor(colorLinked);
 				
 				if(color < 0)//Fin du domaine
@@ -352,8 +365,11 @@ public class Solver {
 						//System.out.print("Backtrack : ");
 						s.reset();//Reset de la variable dépilé
 						nbBacktrack++;
-						s = stack.pop();//On récupère la prochaine variable d'instanciation						
-						checkLinkedPaths();
+						
+						updateColorLinked(lastColor);
+						
+						s = stack.pop();//On récupère la prochaine variable d'instanciation	
+						lastColor = s.getColor();					
 						
 						color = s.nextColor(colorLinked);
 					}
@@ -375,13 +391,13 @@ public class Solver {
 			if(!REASSIGN)//On choisit la prochaine variable à instancier
 			{
 				s = nextVar(variables);
-				color = s.d.nextColor(colorLinked);
+				color = s.nextColor(colorLinked);
 
 				nbAssignation++;
 			}
 			else//On réassigne la variable
 			{
-				REASSIGN = false;
+				//REASSIGN = false;
 				nbReassignation++;
 			}
 			
@@ -395,7 +411,14 @@ public class Solver {
 				;//System.exit(1);
 			*/
 			
-			checkLinkedPaths();//On regarde si on a terminé un chemin avec cette assignation
+			updateColorLinked(color);
+			
+			if(REASSIGN)
+			{
+				REASSIGN = false;
+				updateColorLinked(lastColor);
+			}
+			
 			addPriority(s);
 		}
 	}
@@ -508,7 +531,7 @@ public class Solver {
 	public static void main(String[] args) throws FileNotFoundException {
 		
 		Instance instance = new Instance();
-		instance.loadFromFile("instances/level1.txt");
+		instance.loadFromFile("instances/level12.txt");
 		Solver solver = new Solver(instance);
 		solver.start();
 	}

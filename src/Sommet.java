@@ -6,8 +6,7 @@ public class Sommet {
 	private boolean source;
 	private int color;
 	private ArrayList<Sommet> voisins;
-	private boolean forcedColor;
-	Domaine d;
+	private Domaine d;
 	
 	public Sommet(int c)
 	{
@@ -17,8 +16,6 @@ public class Sommet {
 			source = true;
 		else//Le sommet est une case coloriable
 			source = false;
-		
-		forcedColor = false;
 	}	
 	
 	public String getName() {
@@ -71,16 +68,10 @@ public class Sommet {
 		color = c;
 	}
 	
-	public boolean forcedColor()
-	{
-		return forcedColor;
-	}
-	
 	public void reset()
 	{
 		d.reset();
 		setColor(0);
-		forcedColor = false;
 	}
 	
 	public void setDomaine(Domaine d)
