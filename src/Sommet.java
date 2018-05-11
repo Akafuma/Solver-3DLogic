@@ -5,17 +5,24 @@ public class Sommet {
 	private boolean marked = false;//DFS
 	private boolean source;
 	private int color;
+	private boolean colored;
 	private ArrayList<Sommet> voisins;
-	private Domaine d;
+	 Domaine d;//!!
 	
 	public Sommet(int c)
 	{
 		voisins = new ArrayList<Sommet>();
 		color = c;
 		if(c > 0)//Le sommet est une source
+		{
 			source = true;
+			colored = true;
+		}
 		else//Le sommet est une case coloriable
+		{
 			source = false;
+			colored = false;
+		}		
 	}	
 	
 	public String getName() {
@@ -44,7 +51,12 @@ public class Sommet {
 	public int getColor()
 	{
 		return color;
-	}	
+	}
+	
+	public boolean isColored()
+	{
+		return colored;
+	}
 	
 	public int nextColor(boolean[] state)
 	{
@@ -66,12 +78,14 @@ public class Sommet {
 		}
 		
 		color = c;
+		colored = true;
 	}
 	
 	public void reset()
 	{
-		d.reset();
-		setColor(0);
+		color = 0;
+		colored = false;		
+		d.reset();		
 	}
 	
 	public void setDomaine(Domaine d)

@@ -364,6 +364,8 @@ public class Instance {
 					str = "--|";
 				else if(s.isSource())
 					str = s.getColor() + "!|";
+				else if(s.isColored() && s.getColor() == 0)
+					str = "0!|";
 				else
 					str = s.getColor() + " |";
 				System.out.print(str);
@@ -383,6 +385,8 @@ public class Instance {
 					str = "--|";
 				else if(s.isSource())
 					str = s.getColor() + "!|";
+				else if(s.isColored() && s.getColor() == 0)
+					str = "0!|";
 				else
 					str = s.getColor() + " |";
 				System.out.print(str);
@@ -397,6 +401,8 @@ public class Instance {
 					str = "--|";
 				else if(s.isSource())
 					str = s.getColor() + "!|";
+				else if(s.isColored() && s.getColor() == 0)
+					str = "0!|";
 				else
 					str = s.getColor() + " |";
 				System.out.print(str);
