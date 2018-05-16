@@ -1,4 +1,3 @@
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -19,15 +18,14 @@ public class Solver {
 	private int nbReassignation = 0;
 	private int nbBacktrack = 0;
 	private int nbRemoval = 0;
-	private long varPickupTime = 0;
-	
-	private ArrayList<Sommet> varStack = new ArrayList<Sommet>();
-	
+	private int nbSquareDetected = 0;
+	private long varPickupTime = 0;	
+		
 	/*
 	 * Liste des variables instanciés car la pile n'est pas parcourable
 	 * à l'avenir, faire une classe perso, pour etre utilisé en pile, mais en ayant accès à toute les variables dedans
 	 */
-	//private ArrayList<Sommet> varInstancie = new ArrayList<Sommet>();
+	private ArrayList<Sommet> varStack = new ArrayList<Sommet>();
 	
 	//Utilisation d'une liste de variables prioritaire
 	private LinkedHashSet<Sommet> firstVar;
@@ -95,7 +93,8 @@ public class Solver {
 		return false;
 	}
 	
-	private boolean isLinked(Sommet source)//Vérifie si un chemin coloré relie les sources
+	//Vérifie si un chemin coloré relie les sources
+	private boolean isLinked(Sommet source)
 	{
 		if(source.isSource() == false || source == null)//Argument checking
 		{
@@ -143,6 +142,9 @@ public class Solver {
 		return false;
 	}
 	
+	/*
+	 * Vérifie la contrainte de connexité
+	 */
 	private boolean satisfiesConstraints()
 	{
 		for(int i = 0; i < uniqueSourceColor.size(); i++)
@@ -153,6 +155,9 @@ public class Solver {
 		return true;
 	}
 	
+	/*
+	 * Vérifie la contrainte de construction d'une solution
+	 */
 	private boolean satisfiesLocalBuild(Sommet s)
 	{
 		if(s == null)//Cas de la première itération
@@ -169,9 +174,62 @@ public class Solver {
 				return false;
 		}
 		
+		if(containsSquare(s))
+			return false;
+		
 		return true;
 	}
 	
+	private boolean containsSquare(Sommet s)
+	{
+		int color = s.getColor();
+		if(color > 0 && s.isSource() == false)//Une source ne peut pas faire de carré
+		{
+			ArrayList<Sommet> sameColor = new ArrayList<Sommet>();
+			
+			for(int i = 0; i < s.getVoisins().size(); i++)
+			{
+				Sommet v = s.getVoisins().get(i);
+				if(v.getColor() == color)
+					sameColor.add(v);
+			}
+			
+			if(sameColor.size() == 2)
+			{
+				Sommet w1 = null, w2 = null;
+				Sommet v;
+				v = sameColor.get(0);
+				for(int i = 0; i < v.getVoisins().size(); i++)
+				{
+					Sommet w = v.getVoisins().get(i);
+					if(w.getColor() == color && w != s)
+					{
+						w1 = w;
+						break;
+					}
+				}
+				
+				v = sameColor.get(1);
+				for(int i = 0; i < v.getVoisins().size(); i++)
+				{
+					Sommet w = v.getVoisins().get(i);
+					if(w.getColor() == color && w != s)
+					{
+						w2 = w;
+						break;
+					}
+				}
+				
+				if(w1 != null && w2 != null && w1 == w2)
+				{
+					nbSquareDetected++;
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
 	/* 
 	 * Détection d'un carré ?
 	 * 
@@ -179,6 +237,10 @@ public class Solver {
 	 * 1 1
 	 * 
 	 * Mes 2 voisins de meme couleur ont un autre voisin commun de meme couleur
+	 * 
+	 * On vérifie si le sommet s satisfait les contraintes :
+	 * 		- Son nombre de voisins de la meme couleur que lui est inférieur ou égale à 1/2
+	 * 		- La somme des voisins libre et des voisins de la meme couleur que lui est supérieur ou égale à 1/2
 	 */
 	private boolean validBuild(Sommet s)
 	{		
@@ -215,6 +277,10 @@ public class Solver {
 		return true;
 	}
 
+	/*
+	 * Vérifie si l'assignation est une solution
+	 * Linéaire en nombre de couleur
+	 */
 	private boolean isSolution()
 	{
 		for(int i = 1; i < colorLinked.length; i++)
@@ -225,19 +291,9 @@ public class Solver {
 		return true;
 	}
 	
-	private void checkLinkedPaths()
-	{
-		for(int i = 0; i < uniqueSourceColor.size(); i++)
-		{
-			if(isLinked(uniqueSourceColor.get(i)))
-				colorLinked[uniqueSourceColor.get(i).getColor()] = true;
-			else
-				colorLinked[uniqueSourceColor.get(i).getColor()] = false;;
-		}
-	}
-	
 	/*
-	 * On regarde si la couleur color est terminé
+	 * On a empilé ou dépilé une variable de couleur color,
+	 * on vérifie si cela change l'état du lien de la couleur
 	 */
 	private void updateColorLinked(int color)
 	{
@@ -254,9 +310,8 @@ public class Solver {
 	}
 
 	/*
-	 * Attention
+	 * Renvoie une variable à instancier 
 	 */
-	//Un sommet peut faire partie des 3 listes, on devrait donc remove des 3 listes à chaque fois
 	private Sommet nextVar()
 	{
 		long start = System.nanoTime();
@@ -318,6 +373,7 @@ public class Solver {
 		
 		/*
 		//dead code
+		 * Potentiel besoin de back up 
 		for(int i = 0; i < var.size(); i++)
 		{
 			if(var.get(i).getColor() == 0)
@@ -330,6 +386,7 @@ public class Solver {
 	
 	/*
 	 * Lorsque l'on instancie un sommet, seul ce sommet et ses voisins voient leurs états changer ( ie : leurs nombres de voisins non instanciés a changé )
+	 * On ajoute les voisins de ce sommet dans les listes de priorités
 	 */
 	private void addPriority(Sommet s)//s le dernier sommet instancié
 	{
@@ -408,7 +465,7 @@ public class Solver {
 		
 	}
 
-	private void solve() throws FileNotFoundException
+	private void solve()
 	{
 		Sommet s = null;
 		int color = 0, lastColor = 0;
@@ -438,39 +495,6 @@ public class Solver {
 				}
 				
 				REASSIGN = true;
-				
-				/*
-				if(color < 0)//Fin du domaine
-				{					
-					while(color < 0)//Backtracking
-					{
-						//System.out.print("Backtrack : ");
-						s.reset();//Reset de la variable dépilé
-						nbBacktrack++;
-						
-						if(s.d.INIT == true)
-						{
-							System.out.println("O my GOD");
-							System.exit(1);
-						}
-						
-						updateColorLinked(lastColor);
-						
-						s = stack.pop();//On récupère la prochaine variable d'instanciation	
-						lastColor = s.getColor();
-						
-						color = s.nextColor(colorLinked);
-					}
-					
-					REASSIGN = true;
-				}
-				else
-				{
-					//System.out.print("Reassignation : ");
-					REASSIGN = true;
-				}
-				*/
-				assert REASSIGN == true;
 			}
 			else if(isSolution())//FIN
 			{
@@ -617,7 +641,7 @@ public class Solver {
 	}
 	
 	//Méthode pour lancer la résolution de l'instance
-	public void start() throws FileNotFoundException
+	public void start()
 	{
 		long start, end, duration;
 		System.out.println("init...");
@@ -640,12 +664,12 @@ public class Solver {
 		System.out.println("Nombre de couleurs : " + nbColor);
 		System.out.println("Nombre d'assignation : " + nbAssignation);
 		System.out.println("Nombre de réassignation : " + nbReassignation);
-		System.out.println("Nombre de backtrack : " + nbBacktrack);
+		System.out.println("Nombre de carrés détectés : " + nbSquareDetected);
 		System.out.println("Nombre de suppression d'une liste prioritaire : " + nbRemoval);
 		System.out.println("Temps passé dans la méthode nextVar : " + (varPickupTime / 1000000000.0) + " s");
 	}
 	
-	public void showStack()
+	private void showStack()
 	{
 		System.out.println("Show stack");
 		for(int i = 0; i < varStack.size(); i++)
@@ -655,28 +679,12 @@ public class Solver {
 		}
 	}
 
-	public static void main(String[] args) throws FileNotFoundException {
-		
+	public static void main(String[] args)
+	{		
 		Instance instance = new Instance();
-		instance.loadFromFile("instances/level16.txt");
+		instance.loadFromFile("instances/level24.txt");
 		Solver solver = new Solver(instance);
 		solver.start();
-		
-		System.exit(0);
-		
-		solver.init();
-		Sommet s = solver.sources.get(0).getVoisins().get(0);
-		s.setColor(2);
-		
-		instance.printSolution();		
-		System.out.println(solver.validBuild(s));
-		
-		s.getVoisins().get(0).setColor(2);
-		//s.getVoisins().get(1).setColor(c);
-		s.getVoisins().get(2).setColor(2);
-
-		instance.printSolution();		
-		System.out.println(solver.validBuild(s));
 	}
 
 }
