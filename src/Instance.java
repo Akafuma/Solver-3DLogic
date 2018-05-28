@@ -352,7 +352,7 @@ public class Instance {
 	
 	public void printSolution()
 	{
-		System.out.println();
+		System.out.println("Solution :");
 		for(int r = 0; r < size; r++)
 		{
 			System.out.print("|");

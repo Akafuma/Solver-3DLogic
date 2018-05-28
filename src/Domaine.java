@@ -5,7 +5,7 @@ public class Domaine {
 	private int current;
 
 	private ArrayList<Integer> domaine;
-	 boolean INIT = false;
+	private boolean INIT = false;
 	private Sommet s;
 	
 	public Domaine(int l)

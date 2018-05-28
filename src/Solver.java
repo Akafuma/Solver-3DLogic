@@ -5,29 +5,16 @@ import java.util.Stack;
 
 public class Solver {
 	private Instance instance;
-	/* ???
-	 * Classe assignation :
-	 * Var
-	 * color
-	 * 
-	 * method
-	 * apply()
-	 */
-	int shutdown = 1;
 	private int nbAssignation = 0;
-	private int nbReassignation = 0;
-	private int nbBacktrack = 0;
-	private int nbRemoval = 0;
 	private int nbSquareDetected = 0;
-	private long varPickupTime = 0;	
-		
-	/*
-	 * Liste des variables instanciés car la pile n'est pas parcourable
-	 * à l'avenir, faire une classe perso, pour etre utilisé en pile, mais en ayant accès à toute les variables dedans
-	 */
+	
+	//Verif
+	private long varPickupTime = 0;
+	private int nbRemoval = 0;
+
 	private ArrayList<Sommet> varStack = new ArrayList<Sommet>();
 	
-	//Utilisation d'une liste de variables prioritaire
+	//Listes de variables prioritaire
 	private LinkedHashSet<Sommet> firstVar;
 	private LinkedHashSet<Sommet> secondVar;
 	private LinkedHashSet<Sommet> thirdVar;
@@ -180,10 +167,13 @@ public class Solver {
 		return true;
 	}
 	
+	/*
+	 * On vérifie si s et ses voisins ne forment pas un carré de meme couleur
+	 */
 	private boolean containsSquare(Sommet s)
 	{
 		int color = s.getColor();
-		if(color > 0 && s.isSource() == false)//Une source ne peut pas faire de carré
+		if(color > 0  && s.isSource() == false)//Une source ne peut pas faire de carré
 		{
 			ArrayList<Sommet> sameColor = new ArrayList<Sommet>();
 			
@@ -230,14 +220,8 @@ public class Solver {
 
 		return false;
 	}
+	
 	/* 
-	 * Détection d'un carré ?
-	 * 
-	 * 1 1
-	 * 1 1
-	 * 
-	 * Mes 2 voisins de meme couleur ont un autre voisin commun de meme couleur
-	 * 
 	 * On vérifie si le sommet s satisfait les contraintes :
 	 * 		- Son nombre de voisins de la meme couleur que lui est inférieur ou égale à 1/2
 	 * 		- La somme des voisins libre et des voisins de la meme couleur que lui est supérieur ou égale à 1/2
@@ -288,6 +272,7 @@ public class Solver {
 			if(colorLinked[i] == false)
 				return false;
 		}
+		
 		return true;
 	}
 	
@@ -369,17 +354,14 @@ public class Solver {
 				thirdVar.remove(s);
 				return s;				
 			}
-		}
+		}		
 		
-		/*
-		//dead code
-		 * Potentiel besoin de back up 
-		for(int i = 0; i < var.size(); i++)
+		//Back up 
+		for(int i = 0; i < variables.size(); i++)
 		{
-			if(var.get(i).getColor() == 0)
-				return var.get(i);
-		}
-		*/	
+			if(variables.get(i).isColored() == false)
+				return variables.get(i);
+		}		
 		
 		return null;
 	}
@@ -390,14 +372,7 @@ public class Solver {
 	 */
 	private void addPriority(Sommet s)//s le dernier sommet instancié
 	{
-		//DEBUG
-		int color = s.getColor();
-		if(color == -1)
-		{
-			System.out.println(s.getName());
-			System.exit(1);
-		}
-		
+		int color = s.getColor();		
 		Sommet v, w;
 		ArrayList<Sommet> uncolored = new ArrayList<Sommet>();
 		ArrayList<Sommet> colored = new ArrayList<Sommet>();
@@ -477,7 +452,6 @@ public class Solver {
 		{				
 			if(!satisfiesConstraints() || !satisfiesLocalBuild(s))//Si les contraintes ne sont pas satisfaites
 			{
-				//System.out.println("Contrainte enfreinte");
 				s = stack.pop(); //on ignore s = null car toute instance a une solution
 				varStack.remove(varStack.size() - 1);
 				lastColor = s.getColor();//On récupère la couleur de la variable sur laquelle on échoue				
@@ -504,49 +478,13 @@ public class Solver {
 			
 			if(REASSIGN == false)//On choisit la prochaine variable à instancier
 			{
-				s = nextVar();
-				
-				if(s == null)
-				{
-					System.out.println("s == null");
-					showStack();
-					instance.printSolution();
-					System.exit(1);
-				}
-				
-				if(s.d.INIT == true)//L'init devrait être fausse
-				{
-					System.out.println("What the heck?");
-					System.out.println(s.getName());
-					System.out.println(s.getColor());
-					System.out.println("Colored ? " + s.isColored());
-					System.out.println("Last var " + stack.peek().getName());
-					s.d.showDebug();
-					instance.printSolution();
-					System.exit(1);
-				}
-				
+				s = nextVar();				
 				color = s.nextColor(colorLinked);
-				
-				/*
-				 * Problème avec init2,
-				 * Soit on essaie le backtrack, soit on laisse le domaine plein
-				 */
-				if(color == -1)
-				{
-					System.out.println(s.getName() + ", color :" + color);
-					s.d.showDebug();
-					instance.printSolution();
-					System.exit(1);
-				}
-
 				nbAssignation++;
 			}
 			
-			//System.out.println("Assignation de la variable " + s.getName() + " couleur : " + color);
 			s.setColor(color);
-			stack.push(s);
-			
+			stack.push(s);			
 			varStack.add(s);
 			
 			updateColorLinked(color);
@@ -554,12 +492,11 @@ public class Solver {
 			if(REASSIGN)
 			{
 				REASSIGN = false;
-				nbReassignation++;
+				nbAssignation++;
 				updateColorLinked(lastColor);
 			}
 			
 			addPriority(s);
-			//instance.printSolution();
 		}
 	}
 	
@@ -633,10 +570,10 @@ public class Solver {
 	
 	public void showBenchmark()
 	{
-		System.out.println("Nombre d'assignation : " + nbAssignation);
-		System.out.println("Nombre de réassignation : " + nbReassignation);
-		System.out.println("Nombre de backtrack : " + nbBacktrack);
-		System.out.println("Nombre de suppression d'une liste prioritaire : " + nbRemoval);
+		System.out.println("Nombre de variables : " + variables.size());
+		System.out.println("Nombre de couleurs : " + nbColor);
+		System.out.println("Nombre d'affectation : " + nbAssignation);
+		System.out.println("Nombre de carrés détectés : " + nbSquareDetected);
 		System.out.println();
 	}
 	
@@ -647,29 +584,20 @@ public class Solver {
 		System.out.println("init...");
 		init();
 		
-		//System.exit(1);
+		System.out.println("solving...");	
 		
-		System.out.println("solving...");
 		start = System.nanoTime();
 		solve();
-		end = System.nanoTime();
-		
-		instance.printSolution();
-		//instance.print();
+		end = System.nanoTime();		
 		
 		duration = end - start;
 		System.out.println("Solution trouvé en " + (duration / 1000000000.0) + " s");
 		
-		System.out.println("Nombre de variables : " + variables.size());
-		System.out.println("Nombre de couleurs : " + nbColor);
-		System.out.println("Nombre d'assignation : " + nbAssignation);
-		System.out.println("Nombre de réassignation : " + nbReassignation);
-		System.out.println("Nombre de carrés détectés : " + nbSquareDetected);
-		System.out.println("Nombre de suppression d'une liste prioritaire : " + nbRemoval);
-		System.out.println("Temps passé dans la méthode nextVar : " + (varPickupTime / 1000000000.0) + " s");
+		showBenchmark();
+		instance.printSolution();		
 	}
 	
-	private void showStack()
+	public void showStack()
 	{
 		System.out.println("Show stack");
 		for(int i = 0; i < varStack.size(); i++)
@@ -677,12 +605,15 @@ public class Solver {
 			Sommet s = varStack.get(i);
 			System.out.println(s.getName() + " colored " + s.getColor() + " isColored ? " + s.isColored());
 		}
+		
+		System.out.println("Nombre de suppression d'une liste : " + nbRemoval);
+		System.out.println("Temps passé dans la méthode nextVar : " + varPickupTime);
 	}
 
 	public static void main(String[] args)
 	{		
 		Instance instance = new Instance();
-		instance.loadFromFile("instances/level24.txt");
+		instance.loadFromFile("instances/level27.txt");
 		Solver solver = new Solver(instance);
 		solver.start();
 	}

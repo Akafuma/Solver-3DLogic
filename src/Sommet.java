@@ -7,7 +7,7 @@ public class Sommet {
 	private int color;
 	private boolean colored;
 	private ArrayList<Sommet> voisins;
-	 Domaine d;//!!
+	private Domaine d;
 	
 	public Sommet(int c)
 	{
